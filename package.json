@@ -1,0 +1,77 @@
+{
+  "name": "vscode-jira-translate",
+  "displayName": "VSCode Jira Translate",
+  "description": "A VSCode extension to search Jira issues, translate text, and add translations as comments.",
+  "version": "0.1.2",
+  "publisher": "rshardiwal",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rshardiwal/vscode-jira-translate"
+  },
+  "categories": [
+    "Other"
+  ],
+  "engines": {
+    "vscode": "^1.50.0"
+  },
+  "activationEvents": [
+    "onCommand:vscodeJiraTranslate.searchAndTranslate"
+  ],
+  "main": "./out/extension.js",
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p .",
+    "watch": "tsc -watch -p .",
+    "preinstall": "npm install -g typescript",
+    "postinstall": "jira --version || echo 'Please install Jira CLI manually if not already installed.'"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "vscodeJiraTranslate.searchAndTranslate",
+        "title": "Search Jira Issue and Translate",
+        "category": "Jira Translate"
+      }
+    ],
+    "configuration": {
+      "title": "Jira Translate",
+      "properties": {
+        "jiraTranslate.baseUrl": {
+          "type": "string",
+          "default": "",
+          "description": "Jira base URL"
+        },
+        "jiraTranslate.username": {
+          "type": "string",
+          "default": "",
+          "description": "Jira username"
+        },
+        "jiraTranslate.apiToken": {
+          "type": "string",
+          "default": "",
+          "description": "Jira API token"
+        },
+        "jiraTranslate.targetLanguage": {
+          "type": "string",
+          "default": "en",
+          "description": "Target language for translation (e.g., 'en', 'ja', 'ko')"
+        },
+        "jiraTranslate.translationApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API key for the translation service (e.g., Google Translate API)"
+        }
+      }
+    }
+  },
+  "dependencies": {
+    "axios": "^0.21.1",
+    "vsce": "^2.15.0",
+    "jira-cli": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^14.0.0",
+    "@types/vscode": "^1.50.0",
+    "typescript": "^4.0.3"
+  }
+}
