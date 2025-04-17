@@ -2,7 +2,7 @@
   "name": "vscode-jira-translate",
   "displayName": "VSCode Jira Translate",
   "description": "A VSCode extension to search Jira issues, translate text, and add translations as comments.",
-  "version": "0.1.2",
+  "version": "1.0.3",
   "publisher": "rshardiwal",
   "repository": {
     "type": "git",
@@ -12,10 +12,11 @@
     "Other"
   ],
   "engines": {
-    "vscode": "^1.50.0"
+    "vscode": "^1.70.0"
   },
   "activationEvents": [
-    "onCommand:vscodeJiraTranslate.searchAndTranslate"
+    "onCommand:vscodeJiraTranslate.searchAndTranslate",
+    "onCommand:vscodeJiraTranslate.searchAndDisplay"
   ],
   "main": "./out/extension.js",
   "scripts": {
@@ -23,13 +24,20 @@
     "compile": "tsc -p .",
     "watch": "tsc -watch -p .",
     "preinstall": "npm install -g typescript",
-    "postinstall": "jira --version || echo 'Please install Jira CLI manually if not already installed.'"
+    "clean": "rm -f package-lock.json && rm -rf node_modules",
+    "prepackage": "npm install",
+    "package": "vsce package"
   },
   "contributes": {
     "commands": [
       {
         "command": "vscodeJiraTranslate.searchAndTranslate",
         "title": "Search Jira Issue and Translate",
+        "category": "Jira Translate"
+      },
+      {
+        "command": "vscodeJiraTranslate.searchAndDisplay",
+        "title": "Search and Display Jira Ticket",
         "category": "Jira Translate"
       }
     ],
@@ -65,13 +73,13 @@
     }
   },
   "dependencies": {
-    "axios": "^0.21.1",
-    "vsce": "^2.15.0",
-    "jira-cli": "^1.0.0"
+    "axios": "^1.6.0",
+    "jira-client": "^7.1.0"
   },
   "devDependencies": {
-    "@types/node": "^14.0.0",
-    "@types/vscode": "^1.50.0",
-    "typescript": "^4.0.3"
+    "@types/node": "^16.0.0",
+    "@types/vscode": "^1.70.0",
+    "typescript": "^4.5.5",
+    "vsce": "^2.15.0"
   }
 }

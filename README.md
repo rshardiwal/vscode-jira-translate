@@ -25,6 +25,28 @@ This extension allows you to search for Jira issues and translate the text, addi
    npm install
    ```
 
+## Packaging and Distribution
+
+To create a .vsix file for installation:
+
+1. Install the vsce packaging tool:
+   ```
+   npm install -g @vscode/vsce
+   ```
+2. Package the extension:
+   ```
+   vsce package
+   ```
+3. This will create a .vsix file in your current directory.
+
+### Installing the Extension from .vsix
+
+1. Open VS Code
+2. Go to the Extensions view (Ctrl+Shift+X)
+3. Click on the "..." at the top-right of the Extensions view
+4. Select "Install from VSIX..."
+5. Navigate to and select your .vsix file
+
 ## Usage
 
 1. Open the command palette (Ctrl+Shift+P).

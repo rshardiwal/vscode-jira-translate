@@ -31,28 +31,19 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.registerSearchAndTranslateCommand = void 0;
+exports.registerSearchAndDisplayCommand = void 0;
 const vscode = __importStar(require("vscode"));
 const jiraService_1 = require("../jiraService");
-const translationService_1 = __importDefault(require("../translationService"));
-function registerSearchAndTranslateCommand(context) {
-    const disposable = vscode.commands.registerCommand('vscodeJiraTranslate.searchAndTranslate', () => __awaiter(this, void 0, void 0, function* () {
+function registerSearchAndDisplayCommand(context) {
+    const disposable = vscode.commands.registerCommand('vscodeJiraTranslate.searchAndDisplay', () => __awaiter(this, void 0, void 0, function* () {
         // Get configuration
         const config = vscode.workspace.getConfiguration('jiraTranslate');
         const jiraBaseUrl = config.get('baseUrl') || '';
         const jiraUsername = config.get('username') || '';
         const jiraApiToken = config.get('apiToken') || '';
-        const translationApiKey = config.get('translationApiKey') || '';
         if (!jiraBaseUrl || !jiraUsername || !jiraApiToken) {
             vscode.window.showErrorMessage('Please configure Jira credentials in settings');
-            return;
-        }
-        if (!translationApiKey) {
-            vscode.window.showErrorMessage('Please configure the translation API key in settings');
             return;
         }
         const jiraService = new jiraService_1.JiraService(jiraBaseUrl, jiraUsername, jiraApiToken);
@@ -61,27 +52,42 @@ function registerSearchAndTranslateCommand(context) {
             vscode.window.showErrorMessage('No issue ID provided');
             return;
         }
-        const issue = yield jiraService.searchIssue(issueId);
-        if (!issue) {
-            vscode.window.showErrorMessage(`Issue ${issueId} not found`);
-            return;
+        try {
+            vscode.window.withProgress({
+                location: vscode.ProgressLocation.Notification,
+                title: `Fetching JIRA ticket ${issueId}...`,
+                cancellable: false
+            }, () => __awaiter(this, void 0, void 0, function* () {
+                const issue = yield jiraService.getIssueDetails(issueId);
+                if (!issue) {
+                    vscode.window.showErrorMessage(`Issue ${issueId} not found`);
+                    return;
+                }
+                // Create a new untitled document with ticket content
+                const document = yield vscode.workspace.openTextDocument({
+                    content: formatJiraIssue(issue),
+                    language: 'markdown'
+                });
+                yield vscode.window.showTextDocument(document);
+                vscode.window.showInformationMessage(`JIRA ticket ${issueId} displayed`);
+            }));
         }
-        const textToTranslate = issue.description; // Assuming the description needs translation
-        const targetLanguage = yield vscode.window.showInputBox({ prompt: 'Enter target language code (e.g., "fr" for French)' });
-        if (!targetLanguage) {
-            vscode.window.showErrorMessage('No target language provided');
-            return;
-        }
-        const translationService = new translationService_1.default(translationApiKey);
-        const translationResult = yield translationService.translate(textToTranslate, 'en', 'ja'); // Translate from Japanese to English
-        if (translationResult) {
-            yield jiraService.addComment(issueId, translationResult.translatedText);
-            vscode.window.showInformationMessage(`Translation added as comment to issue ${issueId}`);
-        }
-        else {
-            vscode.window.showErrorMessage('Translation failed');
+        catch (error) {
+            vscode.window.showErrorMessage(`Error fetching JIRA ticket: ${error}`);
         }
     }));
     context.subscriptions.push(disposable);
 }
-exports.registerSearchAndTranslateCommand = registerSearchAndTranslateCommand;
+exports.registerSearchAndDisplayCommand = registerSearchAndDisplayCommand;
+function formatJiraIssue(issue) {
+    return `# ${issue.key}: ${issue.summary}
+
+## Details
+- **Status:** ${issue.status}
+- **Assignee:** ${issue.assignee}
+- **ID:** ${issue.id}
+
+## Description
+${issue.description || "No description provided."}
+`;
+}

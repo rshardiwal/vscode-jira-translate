@@ -1,21 +1,36 @@
-import { exec } from 'child_process';
-import util from 'util';
-
-const execPromise = util.promisify(exec);
+import axios from 'axios';
+import { JiraIssue } from './types';
+import * as vscode from 'vscode';
 
 export class JiraService {
     private baseUrl: string;
+    private username: string;
+    private apiToken: string;
+    private outputChannel: vscode.OutputChannel;
 
-    constructor(baseUrl: string) {
+    constructor(baseUrl: string, username: string, apiToken: string) {
         this.baseUrl = baseUrl;
+        this.username = username;
+        this.apiToken = apiToken;
+        this.outputChannel = vscode.window.createOutputChannel('Jira Translate');
     }
 
     public async searchIssue(issueId: string): Promise<JiraIssue | null> {
         try {
-            const { stdout } = await execPromise(`jira issue view ${issueId} --output json`);
-            const data = JSON.parse(stdout);
+            this.outputChannel.appendLine(`Searching for issue: ${issueId}`);
+            
+            const response = await axios.get(`${this.baseUrl}/rest/api/2/issue/${issueId}`, {
+                auth: {
+                    username: this.username,
+                    password: this.apiToken
+                }
+            });
+            
+            const data = response.data;
+            this.outputChannel.appendLine(`Successfully retrieved issue: ${issueId}`);
             return this.mapToJiraIssue(data);
         } catch (error) {
+            this.outputChannel.appendLine(`Error searching for issue ${issueId}: ${error}`);
             console.error(`Error searching for issue ${issueId}:`, error);
             return null;
         }
@@ -27,9 +42,23 @@ export class JiraService {
 
     public async addComment(issueId: string, comment: string): Promise<boolean> {
         try {
-            await execPromise(`jira issue comment add ${issueId} --comment "${comment}"`);
+            await axios.post(
+                `${this.baseUrl}/rest/api/2/issue/${issueId}/comment`, 
+                { body: comment },
+                {
+                    auth: {
+                        username: this.username,
+                        password: this.apiToken
+                    },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+            this.outputChannel.appendLine(`Successfully added comment to issue ${issueId}`);
             return true;
         } catch (error) {
+            this.outputChannel.appendLine(`Error adding comment to issue ${issueId}: ${error}`);
             console.error(`Error adding comment to issue ${issueId}:`, error);
             return false;
         }
@@ -40,18 +69,9 @@ export class JiraService {
             id: data.id,
             key: data.key,
             summary: data.fields.summary,
-            description: data.fields.description,
-            status: data.fields.status.name,
+            description: data.fields.description || '',
+            status: data.fields.status?.name || 'Unknown',
             assignee: data.fields.assignee?.displayName || 'Unassigned'
         };
     }
-}
-
-export interface JiraIssue {
-    id: string;
-    key: string;
-    summary: string;
-    description: string;
-    status: string;
-    assignee: string;
 }

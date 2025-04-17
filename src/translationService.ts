@@ -8,19 +8,9 @@ export default class TranslationService {
         this.apiKey = apiKey;
     }
 
-    async translate(text: string, targetLanguage: string): Promise<TranslationResult> {
+    async translate(text: string, targetLanguage: string, sourceLanguage: string = 'auto'): Promise<TranslationResult> {
         try {
-            if (typeof (globalThis as any).copilot !== 'undefined') {
-                // Use GitHub Copilot for translation if available
-                const copilotTranslation = await (globalThis as any).copilot.translate(text, targetLanguage);
-                return {
-                    translatedText: 'test copilot' + copilotTranslation.translatedText,
-                    sourceLanguage: copilotTranslation.sourceLanguage || 'unknown',
-                    targetLanguage,
-                };
-            }
-
-            // Fallback to Google Translation API
+            // Use Google Translation API
             const response = await axios.post(
                 'https://translation.googleapis.com/language/translate/v2',
                 {
@@ -37,7 +27,7 @@ export default class TranslationService {
 
             const data = response.data.data.translations[0];
             return {
-                translatedText: 'google translate' + data.translatedText,
+                translatedText: data.translatedText,
                 sourceLanguage: data.detectedSourceLanguage,
                 targetLanguage,
             };

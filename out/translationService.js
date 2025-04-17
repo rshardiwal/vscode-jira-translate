@@ -17,19 +17,10 @@ class TranslationService {
     constructor(apiKey) {
         this.apiKey = apiKey;
     }
-    translate(text, targetLanguage) {
+    translate(text, targetLanguage, sourceLanguage = 'auto') {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                if (typeof globalThis.copilot !== 'undefined') {
-                    // Use GitHub Copilot for translation if available
-                    const copilotTranslation = yield globalThis.copilot.translate(text, targetLanguage);
-                    return {
-                        translatedText: 'test copilot' + copilotTranslation.translatedText,
-                        sourceLanguage: copilotTranslation.sourceLanguage || 'unknown',
-                        targetLanguage,
-                    };
-                }
-                // Fallback to Google Translation API
+                // Use Google Translation API
                 const response = yield axios_1.default.post('https://translation.googleapis.com/language/translate/v2', {
                     q: text,
                     target: targetLanguage,
@@ -41,7 +32,7 @@ class TranslationService {
                 });
                 const data = response.data.data.translations[0];
                 return {
-                    translatedText: 'google translate' + data.translatedText,
+                    translatedText: data.translatedText,
                     sourceLanguage: data.detectedSourceLanguage,
                     targetLanguage,
                 };
