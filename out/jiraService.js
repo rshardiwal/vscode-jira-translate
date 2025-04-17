@@ -72,9 +72,13 @@ class JiraService {
         });
     }
     addComment(issueId, comment) {
+        var _a, _b, _c, _d, _e, _f;
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                yield axios_1.default.post(`${this.baseUrl}/rest/api/2/issue/${issueId}/comment`, { body: comment }, {
+                // Note: We're no longer sanitizing here since textToJiraMarkup already does that
+                // and we want to preserve the Jira markup formatting
+                this.outputChannel.appendLine(`Adding comment to issue ${issueId}`);
+                const response = yield axios_1.default.post(`${this.baseUrl}/rest/api/2/issue/${issueId}/comment`, { body: comment }, {
                     auth: {
                         username: this.username,
                         password: this.apiToken
@@ -87,9 +91,13 @@ class JiraService {
                 return true;
             }
             catch (error) {
-                this.outputChannel.appendLine(`Error adding comment to issue ${issueId}: ${error}`);
+                const errorMessage = ((_c = (_b = (_a = error.response) === null || _a === void 0 ? void 0 : _a.data) === null || _b === void 0 ? void 0 : _b.errorMessages) === null || _c === void 0 ? void 0 : _c.join(', ')) ||
+                    ((_f = (_e = (_d = error.response) === null || _d === void 0 ? void 0 : _d.data) === null || _e === void 0 ? void 0 : _e.errors) === null || _f === void 0 ? void 0 : _f.comment) ||
+                    error.message ||
+                    'Unknown error';
+                this.outputChannel.appendLine(`Error adding comment to issue ${issueId}: ${errorMessage}`);
                 console.error(`Error adding comment to issue ${issueId}:`, error);
-                return false;
+                throw new Error(`Failed to add comment: ${errorMessage}`);
             }
         });
     }

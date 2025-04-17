@@ -2,7 +2,7 @@
   "name": "vscode-jira-translate",
   "displayName": "VSCode Jira Translate",
   "description": "A VSCode extension to search Jira issues, translate text, and add translations as comments.",
-  "version": "1.0.3",
+  "version": "1.0.6",
   "publisher": "rshardiwal",
   "repository": {
     "type": "git",
@@ -16,7 +16,8 @@
   },
   "activationEvents": [
     "onCommand:vscodeJiraTranslate.searchAndTranslate",
-    "onCommand:vscodeJiraTranslate.searchAndDisplay"
+    "onCommand:vscodeJiraTranslate.searchAndDisplay",
+    "onCommand:vscodeJiraTranslate.addCommentToJira"
   ],
   "main": "./out/extension.js",
   "scripts": {
@@ -38,6 +39,11 @@
       {
         "command": "vscodeJiraTranslate.searchAndDisplay",
         "title": "Search and Display Jira Ticket",
+        "category": "Jira Translate"
+      },
+      {
+        "command": "vscodeJiraTranslate.addCommentToJira",
+        "title": "Add Selection as Jira Comment",
         "category": "Jira Translate"
       }
     ],

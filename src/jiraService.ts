@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { JiraIssue } from './types';
 import * as vscode from 'vscode';
+import { sanitizeJiraText } from './utils/jiraFormatter';
 
 export class JiraService {
     private baseUrl: string;
@@ -42,7 +43,11 @@ export class JiraService {
 
     public async addComment(issueId: string, comment: string): Promise<boolean> {
         try {
-            await axios.post(
+            // Note: We're no longer sanitizing here since textToJiraMarkup already does that
+            // and we want to preserve the Jira markup formatting
+            this.outputChannel.appendLine(`Adding comment to issue ${issueId}`);
+            
+            const response = await axios.post(
                 `${this.baseUrl}/rest/api/2/issue/${issueId}/comment`, 
                 { body: comment },
                 {
@@ -55,12 +60,18 @@ export class JiraService {
                     }
                 }
             );
+            
             this.outputChannel.appendLine(`Successfully added comment to issue ${issueId}`);
             return true;
-        } catch (error) {
-            this.outputChannel.appendLine(`Error adding comment to issue ${issueId}: ${error}`);
+        } catch (error: any) {
+            const errorMessage = error.response?.data?.errorMessages?.join(', ') || 
+                               error.response?.data?.errors?.comment || 
+                               error.message || 
+                               'Unknown error';
+                               
+            this.outputChannel.appendLine(`Error adding comment to issue ${issueId}: ${errorMessage}`);
             console.error(`Error adding comment to issue ${issueId}:`, error);
-            return false;
+            throw new Error(`Failed to add comment: ${errorMessage}`);
         }
     }
 

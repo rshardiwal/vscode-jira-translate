@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { JiraService } from '../jiraService';
 import TranslationService from '../translationService';
+import { sanitizeJiraText } from '../utils/jiraFormatter';
 
 export function registerSearchAndTranslateCommand(context: vscode.ExtensionContext) {
     const disposable = vscode.commands.registerCommand('vscodeJiraTranslate.searchAndTranslate', async () => {
@@ -45,7 +46,8 @@ export function registerSearchAndTranslateCommand(context: vscode.ExtensionConte
         const translationResult = await translationService.translate(textToTranslate, 'en', 'ja'); // Translate from Japanese to English
         
         if (translationResult) {
-            await jiraService.addComment(issueId, translationResult.translatedText);
+            // Sanitize the translated text before adding as a comment
+            await jiraService.addComment(issueId, sanitizeJiraText(translationResult.translatedText));
             vscode.window.showInformationMessage(`Translation added as comment to issue ${issueId}`);
         } else {
             vscode.window.showErrorMessage('Translation failed');

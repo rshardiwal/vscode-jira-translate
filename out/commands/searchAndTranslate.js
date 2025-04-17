@@ -39,6 +39,7 @@ exports.registerSearchAndTranslateCommand = void 0;
 const vscode = __importStar(require("vscode"));
 const jiraService_1 = require("../jiraService");
 const translationService_1 = __importDefault(require("../translationService"));
+const jiraFormatter_1 = require("../utils/jiraFormatter");
 function registerSearchAndTranslateCommand(context) {
     const disposable = vscode.commands.registerCommand('vscodeJiraTranslate.searchAndTranslate', () => __awaiter(this, void 0, void 0, function* () {
         // Get configuration
@@ -75,7 +76,8 @@ function registerSearchAndTranslateCommand(context) {
         const translationService = new translationService_1.default(translationApiKey);
         const translationResult = yield translationService.translate(textToTranslate, 'en', 'ja'); // Translate from Japanese to English
         if (translationResult) {
-            yield jiraService.addComment(issueId, translationResult.translatedText);
+            // Sanitize the translated text before adding as a comment
+            yield jiraService.addComment(issueId, (0, jiraFormatter_1.sanitizeJiraText)(translationResult.translatedText));
             vscode.window.showInformationMessage(`Translation added as comment to issue ${issueId}`);
         }
         else {
